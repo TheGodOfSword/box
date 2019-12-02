@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.0.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+  <link rel="alternate" href="/atom.xml" title="Chin's Bolgs" type="application/atom+xml">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '7.5.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":true,"show_result":true,"style":"mac"},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":true},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="类加载器 JAVA虚拟机自带的加载器  &amp;emsp;  Bootstrap 根类加载器（启动类加载器），没有父加载器，它负责加载虚拟机的核心类库，如java.lang.等。它的实现依赖于底层操作系统，属于虚拟机实现的一部分，它没有继承java.lang.ClassLoader,*因为它就是最顶层的类加载器**。 C++实现。 （jre&#x2F;lib&#x2F;rt.jar）&amp;emsp;  Extension 它的">
+<meta name="keywords" content="Java">
+<meta property="og:type" content="article">
+<meta property="og:title" content="类加载器与类加载机制">
+<meta property="og:url" content="https:&#x2F;&#x2F;thegodofsword.github.io&#x2F;2019&#x2F;10&#x2F;05&#x2F;jvm-classloader&#x2F;index.html">
+<meta property="og:site_name" content="Chin&#39;s Bolgs">
+<meta property="og:description" content="类加载器 JAVA虚拟机自带的加载器  &amp;emsp;  Bootstrap 根类加载器（启动类加载器），没有父加载器，它负责加载虚拟机的核心类库，如java.lang.等。它的实现依赖于底层操作系统，属于虚拟机实现的一部分，它没有继承java.lang.ClassLoader,*因为它就是最顶层的类加载器**。 C++实现。 （jre&#x2F;lib&#x2F;rt.jar）&amp;emsp;  Extension 它的">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-11-05T05:05:11.240Z">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://thegodofsword.github.io/2019/10/05/jvm-classloader/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>类加载器与类加载机制 | Chin's Bolgs</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Chin's Bolgs</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">学而不思则罔，思而不学则殆</p>
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://thegodofsword.github.io/2019/10/05/jvm-classloader/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/22.jpeg">
+      <meta itemprop="name" content="Chin">
+      <meta itemprop="description" content="Java/jvm/zookeeper/spring/springBoot/redis....">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Chin's Bolgs">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          类加载器与类加载机制
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-10-05 00:08:44" itemprop="dateCreated datePublished" datetime="2019-10-05T00:08:44+08:00">2019-10-05</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2019-11-05 13:05:11" itemprop="dateModified" datetime="2019-11-05T13:05:11+08:00">2019-11-05</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/JVM/" itemprop="url" rel="index">
+                    <span itemprop="name">JVM</span>
+                  </a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="类加载器"><a href="#类加载器" class="headerlink" title="类加载器"></a>类加载器</h1><ul>
+<li><p><strong>JAVA虚拟机自带的加载器</strong><br>  &emsp;</p>
+<ul>
+<li><p><strong>Bootstrap</strong> 根类加载器（启动类加载器），没有父加载器，它负责加载虚拟机的核心类库，如java.lang.<em>等。它的实现依赖于底层操作系统，属于虚拟机实现的一部分，它没有继承java.lang.ClassLoader,*</em>因为它就是最顶层的类加载器**。 C++实现。 （jre/lib/rt.jar）<br>&emsp;</p>
+<ul>
+<li><p><strong>Extension</strong> <strong>它的父加载器是根类加载器</strong>， 如果用户把创建的Jar包放在/jre/lib/ext下，就会自动由该类加载器加载。扩展类加载器是纯java类，是java.lang.ClassLoader的子类  (/jre/lib/ext)，<strong>扩展类加载器只加载jar包，需要把class文件打成jar</strong><br>&emsp; </p>
+</li>
+<li><p><strong>System</strong>类加载器，应用类加载器。他的父加载器是扩展类加载器，他从环境变量classPath或者系统属性java.class.path所指定的目录中加载类。是用户<strong>自定的类加载器的默认父加载器</strong>     (java.class.path)</p>
+<p>&emsp;</p>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>类加载器本身也是类加载器，类加载器又是谁加载的呢？？（先有鸡还是现有蛋）</p>
+</li>
+<li><p>类加载器是由启动类加载器去加载的，启动类加载器是C++写的，内嵌在JVM中。</p>
+</li>
+<li><p>内嵌于JVM中的启动类加载器会加载java.lang.ClassLoader以及其他的Java平台类。当JVM启动时，一块特殊的机器码会运行，它会加载扩展类加载器以及系统类加载器，（Launcher.getClass.getClassLoader）这块特殊的机器码叫做启动类加载器。</p>
+</li>
+<li><p>启动类加载器并不是java类，其他的加载器都是java类。</p>
+</li>
+<li><p>启动类加载器是特定于平台的机器指令，它负责开启整个加载过程。</p>
+</li>
+<li><p>启动类加载器会加载JRE正常运行所需要的基本组件，这包括java.util 和java.lang等</p>
+</li>
+</ul>
+<a id="more"></a>
+<p>&emsp;</p>
+<ul>
+<li><strong>自定义类加载器</strong><br>  java提供了抽象类java.lang.ClassLoader<br>  自定义类加载器是由默认的系统类加载器加载<br>&emsp;</li>
+</ul>
+<p><strong>注： 除了根类加载器之外，其余的类有且只有一个父加载器</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">graph TD</span><br><span class="line">A[根类加载器] --&gt;|包含| B(扩展类加载器)</span><br><span class="line">B --&gt;|包含| C(应用类加载器)</span><br><span class="line">C --&gt;|包含| D(自定义类加载器)</span><br></pre></td></tr></table></figure>
+
+
+<blockquote>
+<p>Class&lt;?&gt; clazz  = String.class;<br>System.out.println(clzz.getClassLoader())；</p>
+<p>根类加载器 输出是null</p>
+</blockquote>
+<p><strong>重点：</strong><br>自定义类加载器加载classPath外的某个class文件时，如果不指定父加载器，此时默认使用的是系统类加载器，系统类加载器若发现classPath中已经存在该class，那么这个时候自定义类加载器是得不到调用的。如果classPath中没有的话，自定义类加载器才会得到调用。<br><strong>每个类都会尝试用自己的类加载器去加载它依赖的类</strong></p>
+<p>&emsp;</p>
+<pre><code>如果用一个自定义类加载器（父加载器是 系统类加载器）去加载ClassPath以外的MySample类  ，然后再去获取MySample类的实例，此时，构造方法里面 new MyCat();会导致MyCat类也会加载（主动使用了），并且使用的是加载MySample的类加载器。如果mysample的getClassLoader是AppClassLoader，如果ClassPath中没有MyCat，而有MySample，就会报错。
+
+换句话说，就是如果ClassPath中都没有这两个类， 加载MyCat的加载器用的是加载MySample的加载器。</code></pre><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">public class MySample&#123;</span><br><span class="line">    public MySample&#123;</span><br><span class="line">        new MyCat();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<h2 id="命名空间"><a href="#命名空间" class="headerlink" title="命名空间"></a>命名空间</h2><p>命名空间</p>
+<ul>
+<li>每个类加载器都有自己的命名空间，命名空间由该加载器及所有父加载器所加载的类构成；</li>
+<li>在同一个命名空间中，不会出现类的完整名字（包括类的包名）相同的两个类；</li>
+<li>在不同的命名空间中，有可能会出现类的完整名字（包括类的包名）相同的两个类；</li>
+<li>同一命名空间内的类是互相可见的，非同一命名空间内的类是不可见的；</li>
+<li><strong>子加载器可以访问父加载器加载的类，父加载器无法访问子加载器加载的类</strong>。</li>
+</ul>
+<h1 id="双亲委派机制"><a href="#双亲委派机制" class="headerlink" title="双亲委派机制"></a>双亲委派机制</h1><pre><code>某个类加载器去加载一个类，就会从下到上逐层委托父加载器去加载，如果父加载器无法加载就会往下返回委托。 父加载器先回在自己负责的目录下寻找，如果已经加载过，返回成功。否则继续委派父亲，或者往下加载，加载成功就返回。</code></pre><p>用一个自定义类加载器加载两次桌面上的（classPath以外）的class 文件，在各自的命名空间都会加载一次，所以分别会得到不同的两个class，<strong>为什么？</strong></p>
+<p><strong>因为 命名空间</strong></p>
+<p>new 两个ClassLoader，即是两个不同的命名空间<br> 我理解为，其不再classPath里面</p>
+<p> <strong>load1和load2 是两个不同的命名空间，从双亲的角度来说，他们没有任何关系</strong></p>
+ <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">public class MyTest21&#123;</span><br><span class="line">   public static void main(String[] args)&#123;</span><br><span class="line">       MyTest16 loader1=new MyTest16(&quot;loader1&quot;);</span><br><span class="line">       MyTest16 loader2=new MyTest16(&quot;loader2&quot;);</span><br><span class="line">       loader1.setPath(&quot;C:\Users\weichengjie\Desktop&quot;);</span><br><span class="line">       loader2.setPath(&quot;C:\Users\weichengjie\Desktop&quot;);</span><br><span class="line">       //删掉classpath下的Person类</span><br><span class="line">       Class&lt;?&gt; clazz1=load1.loadClass(&quot;Person&quot;);</span><br><span class="line">       Class&lt;?&gt; clazz2=load1.loadClass(&quot;Person&quot;);</span><br><span class="line">       //clazz1和clazz由loader1和loader2加载，结果为false</span><br><span class="line">       System.out.println(clazz1==clazz2);</span><br><span class="line">       </span><br><span class="line">       Object object1=clazz1.getInstance();</span><br><span class="line">       Object object2=clazz2.getInstance();</span><br><span class="line">       </span><br><span class="line">       Method method=clazz1.getMethod(&quot;setPerson&quot;,Object.class);</span><br><span class="line">       //此处报错，loader1和loader2所处不用的命名空间</span><br><span class="line">       method.invoke(object1,object2);</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<h2 id="双亲委托模型好处"><a href="#双亲委托模型好处" class="headerlink" title="双亲委托模型好处"></a>双亲委托模型好处</h2><ul>
+<li>可以确保JAVA核心类库的类型安全，也就是说 我们的应用程序中至少会引用java.lang.Object类，在运行期，这个类会被加载到虚拟机中，如果使用的是自定义的类加载器，可能会造成JAVA虚拟机中存在不同版本的java.lang.Object。导致类型的不兼容。因为双亲委托机制，java的核心类库由根类加载器去加载，从而确保了Java应用所使用的核心类库都是同一版本，是可以兼容的。<br>&emsp;</li>
+<li>Java核心类库提供的类不会被自定义替代。（比方说自定义java.lang,无论如何都是不可能被加载到虚拟机的，因为根类加载器已经加载过了）<br>&emsp;</li>
+<li>不同的类加载器可以为相同名称的类（binary name）创建额外的命名空间。相同名称的类可以并存在Java虚拟机中，只需要用不同的类加载器去加载即可。相当于在Java虚拟机内部建立了一个又一个相互隔离的Java类空间。(上方代码例子)</li>
+</ul>
+<p>破坏双亲委派模型</p>
+<p>Thread.CurrentThread.getContextLoader   获取<br>Thread.CurrentThread.setContextLoader   修改<br>Thread.CurrentThread.getContextLoader   还原</p>
+<h1 id="线程上下文类加载器"><a href="#线程上下文类加载器" class="headerlink" title="线程上下文类加载器"></a>线程上下文类加载器</h1><ul>
+<li>如果线程没有通过setContextClassLoader来设置过的话，则当前线程的上下文加载器是其父线程的加载器。</li>
+<li>Java应用运行初始线程的上下文加载器是AppClassLoader。</li>
+</ul>
+<p><strong>双亲委托模型问题引出：</strong><br>SPI（Service Provider Interface） </p>
+<p>JDBC 、JNDI、等在JDK中，其实现有各种厂商提供的一些实现类。 例如JDBC规范中Connection、Statement接口是又根类加载器去完成的，而像Mysql的具体驱动实现的jar（厂商实现）是由AppClassLoader去加载的，子加载器能看到父加载加载的类，父加载器看不到子加载器加载的类，此时，就会出现问题。从而引出了线程上下文类加载器。</p>
+<p>ContextClassLoader的作用就是破坏双亲委托模型。<br>当高层提供了统一的接口让底层去实现，同时又要在高层加载（或者实例化）底层的类时，就必须要通过上下文类加载器来帮助高层的classLoader找到该类</p>
+<h2 id="破坏双亲委托模型来解决问题："><a href="#破坏双亲委托模型来解决问题：" class="headerlink" title="破坏双亲委托模型来解决问题："></a>破坏双亲委托模型来解决问题：</h2><p><strong>在双亲委托模型下， 类加载是由下至上的，即下层的类加载器会委托上层进行加载。但是对于SPI来说，有些接口是JAVA核心类库提供的，而JAVA核心类库是由启动类加载器加载的，而这些接口的实现却来自不同的jar包（厂商提供，classpath下面），Java的启动类加载器是不会加载其它来源的jar包的。这样传统的双亲委托模型就不能满足SPI的要求了（父加载器加载的类看不到子加载器加载的类）。因此，通过给当前线程设置上下文类加载器，就可以由设置的上下文类加载器来加载接口的实现类。破坏掉双亲委托模型。</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line">/*</span><br><span class="line">    线程上下文类加载器的一般使用模式：（获取-使用-还原）</span><br><span class="line">        伪代码：</span><br><span class="line">        ClassLoader classLoader=Thread.currentThread().getContextLoader();</span><br><span class="line">        try&#123;</span><br><span class="line">            Thread.currentThread().setContextLoader(targetTccl);</span><br><span class="line">            myMethod();</span><br><span class="line">        &#125;finally&#123;</span><br><span class="line">            Thread.currentThread().setContextLoader(classLoader);</span><br><span class="line">        &#125;</span><br><span class="line">        在myMethod中调用Thread.currentThread().getContextLoader()做某些事情</span><br><span class="line">        ContextClassLoader的目的就是为了破坏类加载委托机制</span><br><span class="line">        </span><br><span class="line">        在SPI接口的代码中，使用线程上下文类加载器就可以成功的加载到SPI的实现类。</span><br><span class="line">        </span><br><span class="line">        当高层提供了统一的接口让底层去实现，同时又要在高层加载（或实例化）底层的类时，就必须通过上下文类加载器来帮助高层的ClassLoader找到并加载该类。</span><br><span class="line">        </span><br><span class="line"> public class MyTest26&#123;</span><br><span class="line">    public static void main(String[] args)&#123;</span><br><span class="line">    </span><br><span class="line">    //一旦加入下面此行，将使用ExtClassLoader去加载Driver.class， ExtClassLoader不会去加载classpath，因此无法找到MySql的相关驱动。</span><br><span class="line"> //Thread.getCurrentThread().setContextClassLoader(MyTest26.class.getClassLoader().parent());    </span><br><span class="line"> </span><br><span class="line">        ServiceLoader服务提供者，加载实现的服务</span><br><span class="line">        ServiceLoader&lt;Driver&gt; loader=ServiceLoader.load(Driver.class);</span><br><span class="line">        Iterator&lt;Driver&gt; iterator=loader.iterator();</span><br><span class="line">        while(iterator.hasNext())&#123;</span><br><span class="line">            Driver driver=iterator.next();</span><br><span class="line">            System.out.println(&quot;driver:&quot;+driver.class+</span><br><span class="line">                                &quot;,loader&quot;+driver.class.getClassLoader());</span><br><span class="line">        &#125;</span><br><span class="line">        System.out.println(&quot;当前上下文加载器&quot;</span><br><span class="line">                    +Thread.currentThread().getContextClassLoader());</span><br><span class="line">        System.out.println(&quot;ServiceLoader的加载器&quot;</span><br><span class="line">                    +ServiceLoader.class.getClassLoader());</span><br><span class="line">    &#125;</span><br><span class="line"> &#125;     </span><br><span class="line">*/</span><br></pre></td></tr></table></figure>
+
+
+
+
+<h1 id="类的卸载"><a href="#类的卸载" class="headerlink" title="类的卸载"></a>类的卸载</h1><ul>
+<li>Java虚拟机自带的类加载器加载的类，不可以被卸载</li>
+<li>由用户自定义的类加载器加载的类，可以被卸载</li>
+</ul>
+<ul>
+<li><p>当一个类被加载、连接和初始化之后，它的生命周期就开始了。当此类的Class对象不再被引用，即不可触及时，Class对象就会结束生命周期，类在方法区内的数据也会被卸载。</p>
+</li>
+<li><p>一个类何时结束生命周期，取决于代表它的Class对象何时结束生命周期。</p>
+</li>
+<li><p>由Java虚拟机自带的类加载器所加载的类，在虚拟机的生命周期中，始终不会被卸载。Java虚拟机本身会始终引用这些加载器，而这些类加载器则会始终引用他们所加载的类的Class对象，因此这些Class对象是可触及的。</p>
+</li>
+<li><p>由用户自定义的类加载器所加载的类是可以被卸载的</p>
+</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">/**</span><br><span class="line">    自定义类加载器加载类的卸载</span><br><span class="line">    -XX：+TraceClassUnloading</span><br><span class="line">*/</span><br><span class="line">   public static void main(String[] args)&#123;</span><br><span class="line">        MyTest16 loader2=new MyTest16(&quot;loader2&quot;);  </span><br><span class="line">        loader2.path=&quot;D:\Eclipse\workspace\HiATMP-DDMS\target\classes\&quot;;</span><br><span class="line">        test(loader2);</span><br><span class="line">        loader2=null;</span><br><span class="line">        System.gc();   //让系统去显式执行垃圾回收</span><br><span class="line">        </span><br><span class="line">        输出的两个对象hashcode值不同，因为前面加载的已经被卸载了</span><br><span class="line">        loader2=new MyTest16(&quot;loader6&quot;); //  </span><br><span class="line">        test(loader2);</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+<h1 id="类的初始化时机"><a href="#类的初始化时机" class="headerlink" title="类的初始化时机"></a>类的初始化时机</h1><pre><code>当java虚拟机初始化一个类时，要求它的父类都已经被初始化，但是这条规则并不适用于接口</code></pre><ul>
+<li>在初始化一个类时，并不会先初始化它所实现的接口</li>
+<li>在初始化一个接口时，并不会初始化它的父接口</li>
+</ul>
+<p><strong>即，一个父接口不会因为它的子接口或者实现类的初始化而初始化，只有当程序首次使用特定接口的静态变量是，才会导致该接口初始化。</strong></p>
+<ul>
+<li>类初始化有以下几种情况：</li>
+<li>new</li>
+<li>getstatic</li>
+<li>setstatic</li>
+<li>invokestatic</li>
+<li>Class.forName 反射</li>
+<li>初始化一个类的子类</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+                <a href="/2019/11/05/spi/" rel="prev" title="对SPI的理解">
+                  对SPI的理解 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#类加载器"><span class="nav-number">1.</span> <span class="nav-text">类加载器</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#命名空间"><span class="nav-number">1.1.</span> <span class="nav-text">命名空间</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#双亲委派机制"><span class="nav-number">2.</span> <span class="nav-text">双亲委派机制</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#双亲委托模型好处"><span class="nav-number">2.1.</span> <span class="nav-text">双亲委托模型好处</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#线程上下文类加载器"><span class="nav-number">3.</span> <span class="nav-text">线程上下文类加载器</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#破坏双亲委托模型来解决问题："><span class="nav-number">3.1.</span> <span class="nav-text">破坏双亲委托模型来解决问题：</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#类的卸载"><span class="nav-number">4.</span> <span class="nav-text">类的卸载</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#类的初始化时机"><span class="nav-number">5.</span> <span class="nav-text">类的初始化时机</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <img class="site-author-image" itemprop="image" alt="Chin"
+    src="/images/22.jpeg">
+  <p class="site-author-name" itemprop="name">Chin</p>
+  <div class="site-description" itemprop="description">Java/jvm/zookeeper/spring/springBoot/redis....</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">9</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="feed-link motion-element">
+    <a href="/atom.xml" rel="alternate">
+      <i class="fa fa-rss"></i>RSS
+    </a>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Chin</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v4.0.0
+  </div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> v7.5.0
+  </div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script>
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.0.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+  <link rel="alternate" href="/atom.xml" title="Chin's Bolgs" type="application/atom+xml">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '7.5.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":true,"show_result":true,"style":"mac"},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":true},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="应用层 HTTP  超文本传输协议 FTP    文本传输协议 SMTP    简单邮件传输协议 DNS 域名系统 SSH 安全外壳协议 DHCP   动态主机配置协议 TELNET  远程登录协议 通过应用进程间的交互来完成特定的网络应用运输层– TCP 传输控制协议 UDP 用户数据报文协议 提供通用的数据传输服务给应用层传送报文。由于一台主机可以同时运行多个线程，因此 多个应用层可以同时使用">
+<meta name="keywords" content="Java">
+<meta property="og:type" content="article">
+<meta property="og:title" content="计算机网络泛谈">
+<meta property="og:url" content="https:&#x2F;&#x2F;thegodofsword.github.io&#x2F;2019&#x2F;11&#x2F;28&#x2F;%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C&#x2F;index.html">
+<meta property="og:site_name" content="Chin&#39;s Bolgs">
+<meta property="og:description" content="应用层 HTTP  超文本传输协议 FTP    文本传输协议 SMTP    简单邮件传输协议 DNS 域名系统 SSH 安全外壳协议 DHCP   动态主机配置协议 TELNET  远程登录协议 通过应用进程间的交互来完成特定的网络应用运输层– TCP 传输控制协议 UDP 用户数据报文协议 提供通用的数据传输服务给应用层传送报文。由于一台主机可以同时运行多个线程，因此 多个应用层可以同时使用">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-11-28T09:34:00.886Z">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://thegodofsword.github.io/2019/11/28/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>计算机网络泛谈 | Chin's Bolgs</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Chin's Bolgs</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">学而不思则罔，思而不学则殆</p>
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://thegodofsword.github.io/2019/11/28/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/22.jpeg">
+      <meta itemprop="name" content="Chin">
+      <meta itemprop="description" content="Java/jvm/zookeeper/spring/springBoot/redis....">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Chin's Bolgs">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          计算机网络泛谈
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2019-11-28 17:31:07 / 修改时间：17:34:00" itemprop="dateCreated datePublished" datetime="2019-11-28T17:31:07+08:00">2019-11-28</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/" itemprop="url" rel="index">
+                    <span itemprop="name">计算机网络</span>
+                  </a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="应用层"><a href="#应用层" class="headerlink" title="应用层"></a>应用层</h2><ul>
+<li>HTTP  超文本传输协议</li>
+<li>FTP    文本传输协议</li>
+<li>SMTP    简单邮件传输协议</li>
+<li>DNS 域名系统</li>
+<li>SSH 安全外壳协议</li>
+<li>DHCP   动态主机配置协议</li>
+<li>TELNET  远程登录协议</li>
+</ul><p>通过应用进程间的交互来完成特定的网络应用<br>运输层<br>–</p><ul>
+<li>TCP 传输控制协议</li>
+<li>UDP 用户数据报文协议</li>
+</ul><p>提供通用的数据传输服务给应用层传送报文。由于一台主机可以同时运行多个线程，因此 多个应用层可以同时使用下面的运输层的服务。</p><a id="more"></a>
+
+
+
+<p>简单的说：<br><strong>给应用层传输报文用的。并且是可以给多个应用层复用的。</strong></p>
+<h2 id="网络层-（ip协议）"><a href="#网络层-（ip协议）" class="headerlink" title="网络层 （ip协议）"></a>网络层 （ip协议）</h2><ul>
+<li>IP 网络协议</li>
+<li>ARP 地址转换协议</li>
+<li>RARP 反向地址转换协议</li>
+<li>ICMP  Internet组管理协议</li>
+</ul>
+<p>网络层的任务就是选择合适的网间路由和交换结点， 确保数据及时传送。</p>
+<p>网络层把运输层产生的报文段或者用户数据报封装成分组和包进行传送。<br>在TCP/IP体系结构中因为网络层使用IP协议，因此分组也叫IP数据报，简称IP数据报。</p>
+<h2 id="数据链路层"><a href="#数据链路层" class="headerlink" title="数据链路层"></a>数据链路层</h2><ul>
+<li>ARQ 自动重传协议</li>
+<li>CSMA/CD 停止等待协议</li>
+<li>PPP 点对点协议</li>
+</ul>
+<p>主机之间的数据传输，是依靠一段段链路完成的。它把ip数据报封装成帧，帧里面包含了必要的控制信息（同步信息，地址信息，差错控制等）。这些控制信息能够使接收端知道一个帧是从哪个比特开始哪个比特结束。 （检错、纠错）。纠错通过可靠性传输协议来进行</p>
+<h2 id="物理层"><a href="#物理层" class="headerlink" title="物理层"></a>物理层</h2><ul>
+<li>中继器</li>
+<li>集线器</li>
+<li>网线</li>
+<li>HUB</li>
+</ul>
+<p>在物理层上所传送的数据单位是比特。物理层（physical layer）的作用是实现相邻计算机节点之间比特流的透明传送，尽可能屏蔽掉具体传输介质和物理设备的差异。</p>
+<h2 id="ARP协议的工作原理-？"><a href="#ARP协议的工作原理-？" class="headerlink" title="ARP协议的工作原理 ？"></a>ARP协议的工作原理 ？</h2><p>网络层的协议。<br>它的作用：完成IP地址与物理地址的映射</p>
+<p>原理：</p>
+<p>每台主机都在自己的ARP缓冲区会建立一个ARP列表，里面存IP地址和MAC地址的对应关系。</p>
+<p>1.源主机发送数据包<br>2.检查自己ARP列表是否存在该IP地址对应的MAC地址，<strong>如果有</strong>，直接将数据包发送到这个MAC地址，<strong>如果没有</strong>，则在就想本地网段发起一个ARP请求的广播包，查询此主机的MAC地址<br>3.网络中的所有主机收到这个ARP广播后，检查自己IP和发送的IP是否一致，如果不一致就忽略。如果一致就将这个请求的 IP-MAC映射存到ARP列表。并且发给源请求。<br>4.源请求得到响应也存下来，如果一直没有得到响应就认为没有找到。</p>
+<h2 id="TCP的特点"><a href="#TCP的特点" class="headerlink" title="TCP的特点"></a>TCP的特点</h2><ul>
+<li>面向连接（像打电话一样，需要接通、挂断）</li>
+<li>每个TCP连接只能有两个端点 （一对一）</li>
+<li>可靠交付，无差错、不丢失、不重复、按序到达</li>
+<li>提供全双工通信。允许通信双方的应用进程再任何时候都能够发送数据。双方都有发送缓存和接收缓存，用来临时存放双方通信的数据</li>
+<li>面向字节流传输。</li>
+</ul>
+<p>总结一下主要的点：传输数据之前必须建立连接，传输结束后断开连接。使用三次握手来建立连接。在传递数据时，有确认、窗口】、重传、拥塞控制机制。</p>
+<h2 id="UDP的特点"><a href="#UDP的特点" class="headerlink" title="UDP的特点"></a>UDP的特点</h2><ul>
+<li>无连接</li>
+<li>不保证可靠交付</li>
+<li>面向报文</li>
+<li>无拥塞控制，因此网络出现拥塞不会使源主机的发送速率降低（对实时应用很有用，如 直播，实时视频会议等）</li>
+<li>支持一对一、一对多、多对一、多对多</li>
+<li>首部开销小，只有8个字节，比TCP的20个字节的首部要短</li>
+</ul>
+<p>总结一下主要的点：就是不需要发送数据不需要建立连接，对方不需要给出任何确认。只管发送就完事了。</p>
+<h2 id="三次握手"><a href="#三次握手" class="headerlink" title="三次握手"></a>三次握手</h2><p>TCP建立连接的过程就做握手，需要三次，所以叫三次握手。</p>
+<p>1.双方都处于关闭状态<br>2.客户端主动打开连接，服务端被动打开连接。并且双方的TCP服务器进程创建传输控制块TCB（可以理解为连接状态控制块）。然后服务端进入<strong>监听状态</strong><br>3.第一次握手：客户端传送 同步位 SYN =1，和一个序号seq = x。(<strong>同步已发送</strong>)<br>4.第二次握手：服务端接口到之后，进行第二次握手，SYN = 1,ACK=1 seq=y ,ack = x+1 发送给客户端 状态到达<strong>同步收到</strong><br>5.第三次握手：客户端 ACK=1，seq = x+1,ack=y+1<br>6.三次握手完成，TCP连接建立完成</p>
+<p><strong>总结：双方seq 序列号都是各自定，客户端需要递增一次seq（第三次握手的时候是第一次的递增），第一第二次握手的SYN报文段不能携带数据，应该也算是保证了可靠性传输吧。</strong></p>
+<h2 id="为什么两次握手不可以？"><a href="#为什么两次握手不可以？" class="headerlink" title="为什么两次握手不可以？"></a>为什么两次握手不可以？</h2><p>假设客户端发送了一个连接请求，服务端收到之后就建立连接（两次握手），可能客户端的这个连接因为网路节点长时间滞留导致延误，已经失效，而此时如果B收到就直接建立了连接了的话，服务端会等待客户端发来数据，导致服务端会浪费大量资源。</p>
+<h2 id="为什么不需要四次握手？"><a href="#为什么不需要四次握手？" class="headerlink" title="为什么不需要四次握手？"></a>为什么不需要四次握手？</h2><p>完全可靠的通信协议是不存在的。即便第四次、第五次、第n次…… 握手也不能避免调最后一次握手丢包的情况。</p>
+<h2 id="Server-端收到-Client-端的-SYN-后，为什么还要传回-SYN？"><a href="#Server-端收到-Client-端的-SYN-后，为什么还要传回-SYN？" class="headerlink" title="Server 端收到 Client 端的 SYN 后，为什么还要传回 SYN？"></a>Server 端收到 Client 端的 SYN 后，为什么还要传回 SYN？</h2><p>为了告诉Client端接收到的信息确实就是它发送的信号</p>
+<h2 id="传了SYN-为什么还要传ACK"><a href="#传了SYN-为什么还要传ACK" class="headerlink" title="传了SYN,为什么还要传ACK"></a>传了SYN,为什么还要传ACK</h2><p>还是围绕可靠性的中心思想，服务端传回SYN表示发送方到接收方的通道没有问题，但是接收方到发送方的通道还是需要ACK信号来验证。</p>
+<h2 id="TCP四次挥手的过程"><a href="#TCP四次挥手的过程" class="headerlink" title="TCP四次挥手的过程"></a>TCP四次挥手的过程</h2><p>客户端：A<br>服务端：B<br>以下用A、B来表示。</p>
+<p><strong>第一次挥手：</strong><br>A的<strong>应用进程</strong>向其TCP发出连接释放报文段，并停止发送数据。（应用层-&gt; 网络层），A把连接释放报文段首部的终止控制位FIN 置1，序号seq=u，此时A进入FIN-WAIT-1（终止等待1）状态。</p>
+<p><strong>第二次挥手：</strong><br>B收到连接释放的报文段后，立即发出确认，确认的报文包含：ACK=1,seq=v,ack=u+1 （ack是上一步的seq+1）。发出之后，B就进入了CLOSE-WAIT（关闭等待）状态。并且通知应用层进程要关闭连接了，有要发的赶紧发，没要发的就告诉我，我赶紧跟人家确认关闭了。<br>此时 处于<strong>半关闭</strong>状态，A已经没有数据发送了，但是B发送的，A仍然要接受。</p>
+<p><strong>第三次挥手：</strong><br>如果B已经没有数据发送给A。那应用层就通知TCP（网络层）释放连接。这时B发送 报文段 FIN=1 ACK=1,seq=w,ack=u+1,确认号跟第二次挥手的要保持一致。这时B进入了<strong>最后确认</strong>状态</p>
+<p><strong>第四次挥手：</strong></p>
+<p>A收到B的释放连接报文后，必须对此发出确认。报文段ACK=1,ack=w+1,seq=u+1。然后B收到就进入CLOSED状态。进入时间等待状态，时间等待计时器设置2MSL后，A才进入CLOSED状态。B结束TCP连接的时间早于A。  在进入CLOSED状态后，各方将撤销传输控制块（TCB）</p>
+<p><strong>简单理解：</strong><br>第一次：A要关闭，告诉B。<br>第二次：B收到了，回复A说，可能还有数据，你可以先等待等待，可以单方面释放连接了。我还要告诉应用层先。<br>第三次：应用层告诉B 释放TCP连接，B发送给A。<br>第四次：A收到后告诉B，B立马断开。A还需要等待2MSL时间后关闭</p>
+<p>以上 无论是三次握手还是四次挥手，每一次发送报文段，都会消耗序号seq</p>
+<h2 id="为什么第二次和第三次挥手不能合并？"><a href="#为什么第二次和第三次挥手不能合并？" class="headerlink" title="为什么第二次和第三次挥手不能合并？"></a>为什么第二次和第三次挥手不能合并？</h2><p>因为第二第三次之间，B到A还可能有数据传输。A需要等待B把数据传输完。</p>
+<h2 id="TCP是如何保证可靠传输的？"><a href="#TCP是如何保证可靠传输的？" class="headerlink" title="TCP是如何保证可靠传输的？"></a>TCP是如何保证可靠传输的？</h2><p>1.应答机制<br>2.超时重传。TCP发送报文段后，会有启动定时器，等待目的发来确认，如果没收到就会在定时器的时间内重发。<br>3.数据包校验<br>4.失序数据包重排序。TCP报文段作为IP数据包来传输，IP数据报可能失序，因此TCP报文段的到达也可能失序，它会把失序数据进行重新排序，再交给应用层<br>5.丢弃重复数据<br>6.流量控制。TCP连接每一方都有固定大小的缓冲空间。控制对方发送的流量大小。使用的是滑动窗口协议。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+                <a href="/2019/11/11/concurrentHashMap/" rel="next" title="concurrentHashMap">
+                  <i class="fa fa-chevron-left"></i> concurrentHashMap
+                </a>
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+                <a href="/2019/11/28/%E5%85%B3%E4%BA%8Ehttp%E7%9A%84%E4%B8%80%E4%BA%9B%E7%90%86%E8%A7%A3/" rel="prev" title="关于http的一些理解">
+                  关于http的一些理解 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#应用层"><span class="nav-number">1.</span> <span class="nav-text">应用层</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#网络层-（ip协议）"><span class="nav-number">2.</span> <span class="nav-text">网络层 （ip协议）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#数据链路层"><span class="nav-number">3.</span> <span class="nav-text">数据链路层</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#物理层"><span class="nav-number">4.</span> <span class="nav-text">物理层</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ARP协议的工作原理-？"><span class="nav-number">5.</span> <span class="nav-text">ARP协议的工作原理 ？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#TCP的特点"><span class="nav-number">6.</span> <span class="nav-text">TCP的特点</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#UDP的特点"><span class="nav-number">7.</span> <span class="nav-text">UDP的特点</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#三次握手"><span class="nav-number">8.</span> <span class="nav-text">三次握手</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么两次握手不可以？"><span class="nav-number">9.</span> <span class="nav-text">为什么两次握手不可以？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么不需要四次握手？"><span class="nav-number">10.</span> <span class="nav-text">为什么不需要四次握手？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Server-端收到-Client-端的-SYN-后，为什么还要传回-SYN？"><span class="nav-number">11.</span> <span class="nav-text">Server 端收到 Client 端的 SYN 后，为什么还要传回 SYN？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#传了SYN-为什么还要传ACK"><span class="nav-number">12.</span> <span class="nav-text">传了SYN,为什么还要传ACK</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#TCP四次挥手的过程"><span class="nav-number">13.</span> <span class="nav-text">TCP四次挥手的过程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么第二次和第三次挥手不能合并？"><span class="nav-number">14.</span> <span class="nav-text">为什么第二次和第三次挥手不能合并？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#TCP是如何保证可靠传输的？"><span class="nav-number">15.</span> <span class="nav-text">TCP是如何保证可靠传输的？</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <img class="site-author-image" itemprop="image" alt="Chin"
+    src="/images/22.jpeg">
+  <p class="site-author-name" itemprop="name">Chin</p>
+  <div class="site-description" itemprop="description">Java/jvm/zookeeper/spring/springBoot/redis....</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">9</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="feed-link motion-element">
+    <a href="/atom.xml" rel="alternate">
+      <i class="fa fa-rss"></i>RSS
+    </a>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Chin</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v4.0.0
+  </div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> v7.5.0
+  </div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script>
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

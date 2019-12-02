@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.0.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+  <link rel="alternate" href="/atom.xml" title="Chin's Bolgs" type="application/atom+xml">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '7.5.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":true,"show_result":true,"style":"mac"},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":true},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="数据结构 String List Hash Set Sorted Set String 用来做缓存，Session共享List用来做队列（lpush，rpop）、分页列表无限下拉那种。Hash不常用Set做交集、并集、差集这种。例如共同好友Sorted Set 去重、排序。是插入时排序。带score标识作为权重的。可以做排行榜之类的。">
+<meta name="keywords" content="Java">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Redis简单总结">
+<meta property="og:url" content="https:&#x2F;&#x2F;thegodofsword.github.io&#x2F;2019&#x2F;12&#x2F;01&#x2F;Redis%E7%AE%80%E5%8D%95%E6%80%BB%E7%BB%93&#x2F;index.html">
+<meta property="og:site_name" content="Chin&#39;s Bolgs">
+<meta property="og:description" content="数据结构 String List Hash Set Sorted Set String 用来做缓存，Session共享List用来做队列（lpush，rpop）、分页列表无限下拉那种。Hash不常用Set做交集、并集、差集这种。例如共同好友Sorted Set 去重、排序。是插入时排序。带score标识作为权重的。可以做排行榜之类的。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-12-01T12:45:21.806Z">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://thegodofsword.github.io/2019/12/01/Redis%E7%AE%80%E5%8D%95%E6%80%BB%E7%BB%93/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>Redis简单总结 | Chin's Bolgs</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Chin's Bolgs</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">学而不思则罔，思而不学则殆</p>
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://thegodofsword.github.io/2019/12/01/Redis%E7%AE%80%E5%8D%95%E6%80%BB%E7%BB%93/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/22.jpeg">
+      <meta itemprop="name" content="Chin">
+      <meta itemprop="description" content="Java/jvm/zookeeper/spring/springBoot/redis....">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Chin's Bolgs">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Redis简单总结
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2019-12-01 20:43:46 / 修改时间：20:45:21" itemprop="dateCreated datePublished" datetime="2019-12-01T20:43:46+08:00">2019-12-01</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/redis/" itemprop="url" rel="index">
+                    <span itemprop="name">redis</span>
+                  </a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="数据结构"><a href="#数据结构" class="headerlink" title="数据结构"></a>数据结构</h2><ol>
+<li>String</li>
+<li>List</li>
+<li>Hash</li>
+<li>Set</li>
+<li>Sorted Set</li>
+</ol><p>String 用来做缓存，Session共享<br>List用来做队列（lpush，rpop）、分页列表无限下拉那种。<br>Hash不常用<br>Set做交集、并集、差集这种。例如共同好友<br>Sorted Set 去重、排序。是插入时排序。带score标识作为权重的。可以做排行榜之类的。</p><a id="more"></a>
+
+<h2 id="分布式锁"><a href="#分布式锁" class="headerlink" title="分布式锁"></a>分布式锁</h2><p>使用setnx 来获取锁，并设置expire 来设置过期时间，防止锁忘记释放<br>防止在expire 前宕机，可以把setnx和expire 合成一条命令来执行。</p>
+<h2 id="异步队列"><a href="#异步队列" class="headerlink" title="异步队列"></a>异步队列</h2><p>使用List  lpush 和rpop 或者 rpush 和lpop 一个生产一个消费。</p>
+<p>如果没有消息到来要sleep 一下，如果不sleep 可以用blpop来阻塞，直到消息到来。</p>
+<h2 id="延时队列"><a href="#延时队列" class="headerlink" title="延时队列"></a>延时队列</h2><p>使用Sorted Set,以消息内容作为key，用时间戳作为score ，然后用zrangebyscore获取N秒前的 数据来轮询处理。</p>
+<h2 id="检索"><a href="#检索" class="headerlink" title="检索"></a>检索</h2><p>由于Redis是单线程的，Keys命令会造成阻塞，导致服务停顿，影响线上性能。可以使用scan指令是无阻塞的。scan是增量式迭代的命令，不能保证获取的过程中key受改变。并且scan有可能是重复的，在客户端再做一次去重就可以了。</p>
+<h2 id="Pipeline"><a href="#Pipeline" class="headerlink" title="Pipeline"></a>Pipeline</h2><p>可以缩短IO时间，命令批量执行。前提是命令中没有上下文关系</p>
+<h2 id="持久化"><a href="#持久化" class="headerlink" title="持久化"></a>持久化</h2><p>RDB（镜像全量持久化）+ AOF（增量持久化）</p>
+<ul>
+<li>RDB:</li>
+</ul>
+<p>冷备<br>优点：性能影响小，原因是通过Fork子线程去持久化的，父子线程数据共享，父线程继续负责写入数据（copy on write）<br>缺点：耗时长，不够实时性，默认是5分钟执行一次。</p>
+<ul>
+<li>AOF</li>
+</ul>
+<p>热备<br>优点：是根据设置的sync 属性去定时追加写入到日志文件中，最短可以1秒1次，也就是说最多就会丢失1秒的数据。实时性较高。由于是追加写入，也节约了磁盘的寻址开销。（机器端点的时候也最多丢失1秒数据）<br>缺点：同等数据写入的文件大小要比RDB大。</p>
+<h2 id="同步机制"><a href="#同步机制" class="headerlink" title="同步机制"></a>同步机制</h2><p>主从同步、从从同步。</p>
+<p>第一次同步时，主节点会bgsave 生成RDB文件，然后发送给从节点，并同时把后续修改的记录加载到内存Buffer中，等待完成后，将RDB镜像传给复制节点，复制节点把镜像加载到内存里面。加载好了之后就通知主节点把后续更新的记录告诉复制节点，复制节点重放完成同步。后续的增量操作就通过AOF日志来同步即可。</p>
+<p>主从是怎么同步的？<br>当启动一个slave节点时，它会向master发送一个psync命令，master 会生成RDB快照发送给slave,slave写到本地磁盘，刷入缓存。</p>
+<h2 id="哨兵模式"><a href="#哨兵模式" class="headerlink" title="哨兵模式"></a>哨兵模式</h2><p>哨兵是一个独立的进程，作为进程，它会独立运行。其原理是哨兵通过发送命令，等待Redis服务器响应，从而监控运行的多个Redis实例。</p>
+<p>它的作用及原理：<br>1.通过发送命令给Redis服务器，监控Master和Slave<br>2.监控到Master宕机，会通过发布订阅模式通知从服务器修改配置文件，切换主机地址。<br>3.故障转移，如果master宕机会选择Slave节点迁移。</p>
+<p>为保证高可用，会有多哨兵进程同时运行，并且哨兵与哨兵之间还会相互监控。</p>
+<h2 id="缓存一致性问题？"><a href="#缓存一致性问题？" class="headerlink" title="缓存一致性问题？"></a>缓存一致性问题？</h2><p>读写加入内存队列，串行化执行。谨慎使用，会降低系统吞吐率。</p>
+<h2 id="DB数据更新后为什么是删缓存而不是更新缓存？"><a href="#DB数据更新后为什么是删缓存而不是更新缓存？" class="headerlink" title="DB数据更新后为什么是删缓存而不是更新缓存？"></a>DB数据更新后为什么是删缓存而不是更新缓存？</h2><p>删除是最好的，懒加载思想。被删除的Key可能是冷数据。也不占用内存空间</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+                <a href="/2019/11/28/%E5%85%B3%E4%BA%8Ehttp%E7%9A%84%E4%B8%80%E4%BA%9B%E7%90%86%E8%A7%A3/" rel="next" title="关于http的一些理解">
+                  <i class="fa fa-chevron-left"></i> 关于http的一些理解
+                </a>
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+                <a href="/2019/12/01/%E7%BC%93%E5%AD%98%E9%9B%AA%E5%B4%A9%E3%80%81%E7%A9%BF%E9%80%8F%E3%80%81%E5%87%BB%E7%A9%BF%E5%87%BA%E7%8E%B0%E7%9A%84%E5%8E%9F%E5%9B%A0%E5%8F%8A%E5%BA%94%E5%AF%B9%E5%8A%9E%E6%B3%95/" rel="prev" title="缓存雪崩、穿透、击穿出现的原因及应对办法">
+                  缓存雪崩、穿透、击穿出现的原因及应对办法 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#数据结构"><span class="nav-number">1.</span> <span class="nav-text">数据结构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#分布式锁"><span class="nav-number">2.</span> <span class="nav-text">分布式锁</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#异步队列"><span class="nav-number">3.</span> <span class="nav-text">异步队列</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#延时队列"><span class="nav-number">4.</span> <span class="nav-text">延时队列</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#检索"><span class="nav-number">5.</span> <span class="nav-text">检索</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Pipeline"><span class="nav-number">6.</span> <span class="nav-text">Pipeline</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#持久化"><span class="nav-number">7.</span> <span class="nav-text">持久化</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#同步机制"><span class="nav-number">8.</span> <span class="nav-text">同步机制</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#哨兵模式"><span class="nav-number">9.</span> <span class="nav-text">哨兵模式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#缓存一致性问题？"><span class="nav-number">10.</span> <span class="nav-text">缓存一致性问题？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#DB数据更新后为什么是删缓存而不是更新缓存？"><span class="nav-number">11.</span> <span class="nav-text">DB数据更新后为什么是删缓存而不是更新缓存？</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <img class="site-author-image" itemprop="image" alt="Chin"
+    src="/images/22.jpeg">
+  <p class="site-author-name" itemprop="name">Chin</p>
+  <div class="site-description" itemprop="description">Java/jvm/zookeeper/spring/springBoot/redis....</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">9</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="feed-link motion-element">
+    <a href="/atom.xml" rel="alternate">
+      <i class="fa fa-rss"></i>RSS
+    </a>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Chin</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v4.0.0
+  </div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> v7.5.0
+  </div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script>
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
